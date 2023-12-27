@@ -1,6 +1,11 @@
 # RaftMIDI
 RaftMIDI let's you translate a lot of (unfortunately not all) MIDI files to AutoHotkey keystrokes to play piano in the game Raft automatically<br>
 Also includes MIDI track selection for (theoretically) better results
+Don't be mad that some of the songs sound awful. It was and always will be problem with conversions
+
+## Example:
+- Ed Sheeran - Shape of You: https://www.youtube.com/watch?v=Emd-HqijJlE
+- Andrew Wrangell - Rush E: https://www.youtube.com/watch?v=TxiLU1Cq6to
 
 # Usage
 - Run midiraft.py using at least python 3.8
