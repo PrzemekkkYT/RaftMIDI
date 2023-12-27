@@ -7,6 +7,11 @@ Don't be mad that some of the songs sound awful. It was and always will be probl
 - Ed Sheeran - Shape of You: https://www.youtube.com/watch?v=Emd-HqijJlE
 - Andrew Wrangell - Rush E: https://www.youtube.com/watch?v=TxiLU1Cq6to
 
+# Requirements
+- At least python 3.8
+- Python <b>[colored 1.4.4](https://pypi.org/project/colored/1.4.4/)</b> package | pip install colored==1.4.4
+- Python <b>[py_midicsv 4.0](https://pypi.org/project/py-midicsv/4.0.0/)</b> package | pip install py_midicsv==4.0.0
+
 # Usage
 - Run midiraft.py using at least python 3.8
 - Input local path to file (like ./RushE.mid)
