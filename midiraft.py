@@ -194,6 +194,7 @@ def get_timestamps(csv_string, track_num):
         (min(notes_to_keys, key=lambda x: abs(x - note[0])), *note[1:])
         for note in notes
     ]
+    notes = sorted(notes, key=lambda x: x[1])
 
     for timestamp in timestamps:
         for note in notes:
@@ -253,12 +254,91 @@ def ahk(file_name, tpms, timestamps):
         print("Converted successfully")
 
 
-def notesheet(file_name, tpms, timestamps):
+def notesheet(file_name, tpms, notes):
     with open(f"{file_name.split('/')[-1]}.notesheet", "w+") as notesheet:
         notesheet.write(
             "#File generated using https://github.com/PrzemekkkYT/RaftMIDI\n"
         )
-        notesheet.write(f"{file_name.split('/')[-1]}|RaftMIDI|1.0\n")
+        notesheet.write(f"|{file_name.split('/')[-1]}|RaftMIDI|1.0\n")
+
+        notes_per_start = {}
+        for note in notes:
+            start = note[1]
+            if start not in notes_per_start:
+                notes_per_start[start] = [note]
+            if start in notes_per_start and note not in notes_per_start[start]:
+                notes_per_start[start].append(note)
+
+        with open("test.log", "w") as aaa:
+            import json
+
+            json.dump(notes_per_start, aaa, ensure_ascii=False, indent=4)
+
+        for i, (start, _notes) in enumerate(notes_per_start.items()):
+            ret_keys = ""
+            ret_modifier = ""
+            ret_howLong = 0.0
+            ret_tillNext = 0.0
+            for _note in _notes:
+                # print(len(_notes))
+                if len(_notes) > 1:
+                    if _note[0] in notes_with_space:
+                        notesheet.write(f"{notes_to_keys[_note[0]]} SP 0.001 0.0\n")
+                        break
+                    elif _note[0] in notes_with_shift:
+                        notesheet.write(f"{notes_to_keys[_note[0]]} SH 0.001 0.0\n")
+                        break
+                elif len(_notes) == 1:
+                    if _note[0] in notes_with_space:
+                        print("SP")
+                        ret_modifier = "SP"
+                    elif _note[0] in notes_with_shift:
+                        print("SH")
+                        ret_modifier = "SH"
+
+                if (x := f"{notes_to_keys[_note[0]]}") not in ret_keys:
+                    ret_keys += f"{x}|"
+
+                # print(f"{start=} | {min_end=} | {ret_howLong=} | {ret_tillNext=}")
+
+            min_end = min(_notes, key=lambda x: x[2])[2]
+
+            ret_howLong = (
+                (min_end - start) / 1000 / tpms[nearest_lower(tpms.keys(), start)]
+            )
+            # print((i + 1 if i < len(notes_per_start) else len(notes_per_start)))
+            ret_tillNext = (
+                (
+                    list(notes_per_start.keys())[
+                        (
+                            i + 1
+                            if i < len(notes_per_start) - 1
+                            else len(notes_per_start) - 1
+                        )
+                    ]
+                    - min_end
+                )
+                / 1000
+                / tpms[nearest_lower(tpms.keys(), start)]
+            )
+
+            if ret_howLong < 0:
+                ret_howLong = 0.0
+            if ret_tillNext < 0:
+                ret_tillNext = 0.0
+
+            if len(ret_keys) > 0:
+                # print(f"{i=} | {len(notes_per_start) - 1}")
+                if i != len(notes_per_start) - 1:
+                    notesheet.write(
+                        f"{ret_keys[:-1]} {ret_modifier} {ret_howLong:.4f} {ret_tillNext:.4f}\n"
+                    )
+                else:
+                    notesheet.write(
+                        f"{ret_keys[:-1]} {ret_modifier} {ret_howLong:.4f} {ret_tillNext:.4f}"
+                    )
+
+        # print(notes_per_start)
 
 
 if __name__ == "__main__":
@@ -270,14 +350,14 @@ if __name__ == "__main__":
     tpms, timestamps, notes = get_timestamps(csv_string, track_num)
 
     # print(f"{timestamps=}")
-    print(f"{notes=}")
-    print("====================================================================")
-    print(f"{tpms=}")
+    # print(f"{notes=}")
+    # print("====================================================================")
+    # print(f"{tpms=}")
     # print(f"{bpm=} | {ppq=} | t/s={bpm*ppq/60}")
 
     if export_type == "ahk":
         ahk(file_name, tpms, timestamps)
     elif export_type == "notesheet":
-        notesheet(file_name, tpms, timestamps)
+        notesheet(file_name, tpms, notes)
     else:
         print("No type selected. Conversion aborted.")
