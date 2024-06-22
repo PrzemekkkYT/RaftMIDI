@@ -269,18 +269,12 @@ def notesheet(file_name, tpms, notes):
             if start in notes_per_start and note not in notes_per_start[start]:
                 notes_per_start[start].append(note)
 
-        with open("test.log", "w") as aaa:
-            import json
-
-            json.dump(notes_per_start, aaa, ensure_ascii=False, indent=4)
-
         for i, (start, _notes) in enumerate(notes_per_start.items()):
             ret_keys = ""
             ret_modifier = ""
             ret_howLong = 0.0
             ret_tillNext = 0.0
             for _note in _notes:
-                # print(len(_notes))
                 if len(_notes) > 1:
                     if _note[0] in notes_with_space:
                         notesheet.write(f"{notes_to_keys[_note[0]]} SP 0.001 0.0\n")
@@ -290,10 +284,10 @@ def notesheet(file_name, tpms, notes):
                         break
                 elif len(_notes) == 1:
                     if _note[0] in notes_with_space:
-                        print("SP")
+                        # print("SP")
                         ret_modifier = "SP"
                     elif _note[0] in notes_with_shift:
-                        print("SH")
+                        # print("SH")
                         ret_modifier = "SH"
 
                 if (x := f"{notes_to_keys[_note[0]]}") not in ret_keys:
