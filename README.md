@@ -1,3 +1,5 @@
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/L3L6132634)
+
 # RaftMIDI
 RaftMIDI let's you translate a lot of (unfortunately not all) MIDI files to AutoHotkey keystrokes to play piano in the game Raft automatically<br>
 Also includes MIDI track selection for (theoretically) better results
