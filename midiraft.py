@@ -1,3 +1,4 @@
+import pathlib
 from py_midicsv import midi_to_csv
 from py_midicsv.midi.fileio import ValidationError
 from colored import fg, attr
@@ -48,10 +49,14 @@ class TrackSelectionError(Exception): ...
 
 
 def start():
-    file_name = input("Enter a file path: ").replace("\\", "/")
+    file_path = input("Enter a file path: ").replace("\\", "/")
+    file_name = file_path.split("/")[-1].replace(".mid", "").replace(".midi", "")
 
     try:
-        csv_string = midi_to_csv(f"{file_name}")
+        csv_string = midi_to_csv(f"{file_path}")
+        with open("chuj.aaa", "w+") as aaa:
+            for a in csv_string:
+                aaa.write(f"{a}\n")
     except ValidationError as validError:
         print(
             pretty_traceback(
@@ -86,7 +91,7 @@ def start():
         )
         exit(0)
 
-    return csv_string, track_num, file_name
+    return csv_string, track_num, file_path, file_name
 
 
 # with open(f"{file_name}.csv", "w") as f:
@@ -218,7 +223,7 @@ def get_timestamps(csv_string, track_num):
 
 
 def ahk(file_name, tpms, timestamps):
-    with open(f"{file_name.split('/')[-1]}.ahk", "w+") as ahk:
+    with open(f"output/{file_name}.ahk", "w+") as ahk:
         ahk.write("#Requires AutoHotkey v2.0\n\n")
         ahk.write("!c::{\n")
 
@@ -254,8 +259,8 @@ def ahk(file_name, tpms, timestamps):
         print("Converted successfully")
 
 
-def notesheet(file_name, tpms, notes):
-    with open(f"{file_name.split('/')[-1]}.notesheet", "w+") as notesheet:
+def notesheet_v1(file_name, tpms, notes):
+    with open(f"output/{file_name}.notesheet", "w+") as notesheet:
         notesheet.write(
             "#File generated using https://github.com/PrzemekkkYT/RaftMIDI\n"
         )
@@ -335,10 +340,45 @@ def notesheet(file_name, tpms, notes):
         # print(notes_per_start)
 
 
+def notesheet_v2(file_name, tpms, notes):
+    with open(f"output/{file_name}.notesheet", "w+") as notesheet:
+        notesheet.write(
+            "#File generated using https://github.com/PrzemekkkYT/RaftMIDI\n"
+        )
+        notesheet.write(f"|{file_name.split('/')[-1]}|RaftMIDI|2.0\n")
+
+        notes_per_start = {}
+        for note in notes:
+            start = note[1]
+            if start not in notes_per_start:
+                notes_per_start[start] = [note]
+            if start in notes_per_start and note not in notes_per_start[start]:
+                notes_per_start[start].append(note)
+
+        for note, start, end in notes:
+            ret_modifier = ""
+
+            if note in notes_with_space:
+                ret_modifier = "SP"
+            elif note in notes_with_shift:
+                ret_modifier = "SH"
+
+            if len(notes_per_start[start]) > 1:
+                end = start + 0.1
+
+            start = start / 1000 / tpms[nearest_lower(tpms.keys(), start)]
+            end = end / 1000 / tpms[nearest_lower(tpms.keys(), start)]
+
+            new_line = "\n"
+            notesheet.write(
+                f"{notes_to_keys[note]} {ret_modifier} {start:.4f} {end:.4f}{new_line if (note, start, end) != notes[-1] else ''}"
+            )
+
+
 if __name__ == "__main__":
-    csv_string, track_num, file_name = start()
+    csv_string, track_num, file_path, file_name = start()
     export_type = input(
-        "Do you want to export as .ahk or RandomThingsIveDone's Notesheet\nOptions: ahk | notesheet\n"
+        "Do you want to export as .ahk or RandomThingsIveDone's Notesheet\nOptions: ahk | n1 | n2\n"
     )
 
     tpms, timestamps, notes = get_timestamps(csv_string, track_num)
@@ -349,9 +389,13 @@ if __name__ == "__main__":
     # print(f"{tpms=}")
     # print(f"{bpm=} | {ppq=} | t/s={bpm*ppq/60}")
 
+    pathlib.Path("./output").mkdir(parents=True, exist_ok=True)
+
     if export_type == "ahk":
         ahk(file_name, tpms, timestamps)
-    elif export_type == "notesheet":
-        notesheet(file_name, tpms, notes)
+    elif export_type == "n":
+        notesheet_v1(file_name, tpms, notes)
+    elif export_type == "n2":
+        notesheet_v2(file_name, tpms, notes)
     else:
         print("No type selected. Conversion aborted.")
